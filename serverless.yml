@@ -1,0 +1,22 @@
+service: todo
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+functions:
+  hello:
+    handler: src/handlers.hello
+    events:
+      - http:
+          path: hello
+          method: GET
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
