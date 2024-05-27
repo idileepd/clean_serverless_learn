@@ -1,6 +1,6 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-import { CognitoIdentityServiceProvider } from "aws-sdk";
+import { cognito } from "./provider";
 
 export const handler: APIGatewayProxyHandler = async (event, _context) => {
   try {
@@ -9,7 +9,6 @@ export const handler: APIGatewayProxyHandler = async (event, _context) => {
     if (typeof password !== "string" || typeof email !== "string") {
       throw new Error("Invalid Credentials");
     }
-    const cognito = new CognitoIdentityServiceProvider();
 
     const result = await cognito
       .adminCreateUser({

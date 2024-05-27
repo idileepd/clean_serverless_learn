@@ -39,6 +39,12 @@ functions:
       - httpApi:
           path: /register
           method: POST
+  login:
+    handler: src/login.handler
+    events:
+      - httpApi:
+          path: /login
+          method: POST
 
 custom:
   webpack:
