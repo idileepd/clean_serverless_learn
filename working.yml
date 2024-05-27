@@ -21,7 +21,8 @@ provider:
           Action:
             - lambda:InvokeFunction
           Resource:
-            - !Sub arn:aws:lambda:${self:provider.region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-token-generator
+            - !Sub arn:aws:lambda:${self:provider.region}:${AWS::AccountId}:function:${self:provider.environment.TOKEN_GENERATOR_ARN}
+            # - arn:aws:lambda:${self:provider.region}:#{AWS::AccountId}:function:todo-dev-preTokenGeneration
 
   httpApi:
     authorizers:
@@ -34,7 +35,6 @@ provider:
             - ".amazonaws.com/"
             - !Ref "UserPool"
         audience: { Ref: UserPoolClient }
-
   environment:
     USER_POOL_NAME: ${self:service}-user-pool-${self:provider.stage}
     USER_POOL_CLIENT_NAME: ${self:service}-user-pool-client-${self:provider.stage}
@@ -45,6 +45,7 @@ provider:
 plugins:
   - serverless-webpack
   - serverless-offline
+  # - serverless-plugin-typescript
 
 functions:
   hello:
@@ -68,8 +69,8 @@ functions:
           path: /login
           method: POST
   token-generator:
+    name: ${self:provider.environment.TOKEN_GENERATOR_ARN}
     handler: src/tokenPatcher.handler
-    name: ${self:service}-${self:provider.stage}-token-generator
 
 custom:
   webpack:
@@ -93,7 +94,8 @@ resources:
             MinimumLength: 6
         AutoVerifiedAttributes: ["email"]
         LambdaConfig:
-          PreTokenGeneration: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-token-generator"
+          # PreTokenGeneration: arn:aws:lambda:${self:provider.region}:${AWS::AccountId}:function:${self:provider.environment.TOKEN_GENERATOR_ARN}
+          PreTokenGeneration: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:provider.environment.TOKEN_GENERATOR_ARN}"
     UserPoolClient:
       Type: AWS::Cognito::UserPoolClient
       Properties:
@@ -106,41 +108,24 @@ resources:
         ExplicitAuthFlows:
           - ADMIN_NO_SRP_AUTH
 
-    LambdaExecutionRole:
-      Type: AWS::IAM::Role
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: "Allow"
-              Principal:
-                Service: "lambda.amazonaws.com"
-              Action: "sts:AssumeRole"
-        Policies:
-          - PolicyName: "lambdaPolicy"
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Effect: "Allow"
-                  Action:
-                    - "logs:CreateLogGroup"
-                    - "logs:CreateLogStream"
-                    - "logs:PutLogEvents"
-                  Resource: "*"
-          - PolicyName: "UserPoolLambdaInvokePolicy"
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Effect: "Allow"
-                  Action:
-                    - "lambda:InvokeFunction"
-                  Resource:
-                    - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-token-generator"
-
-    PreTokenGenerationLambdaPermission:
-      Type: AWS::Lambda::Permission
-      Properties:
-        Action: "lambda:InvokeFunction"
-        FunctionName: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-token-generator"
-        Principal: "cognito-idp.amazonaws.com"
-        SourceArn: !GetAtt UserPool.Arn
+    # LambdaExecutionRole:
+    #   Type: AWS::IAM::Role
+    #   Properties:
+    #     AssumeRolePolicyDocument:
+    #       Version: "2012-10-17"
+    #       Statement:
+    #         - Effect: "Allow"
+    #           Principal:
+    #             Service: "lambda.amazonaws.com"
+    #           Action: "sts:AssumeRole"
+    #     Policies:
+    #       - PolicyName: "lambdaPolicy"
+    #         PolicyDocument:
+    #           Version: "2012-10-17"
+    #           Statement:
+    #             - Effect: "Allow"
+    #               Action:
+    #                 - "logs:CreateLogGroup"
+    #                 - "logs:CreateLogStream"
+    #                 - "logs:PutLogEvents"
+    #               Resource: "*"
