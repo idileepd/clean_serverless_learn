@@ -1,6 +1,6 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 
-export const handler: APIGatewayProxyHandler = async (_event, _context) => {
+export const handler: APIGatewayProxyHandler = async (event, _context) => {
   const {
     USER_POOL_NAME,
     USER_POOL_CLIENT_NAME,
@@ -15,6 +15,7 @@ export const handler: APIGatewayProxyHandler = async (_event, _context) => {
       USER_POOL_CLIENT_NAME,
       USER_POOL_REF,
       USER_POOL_CLIENT_REF,
+      headers: event.headers,
     }),
   };
 };
