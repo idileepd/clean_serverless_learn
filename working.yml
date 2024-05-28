@@ -79,6 +79,16 @@ custom:
 
 resources:
   Resources:
+    PreSignUpLambdaFunction:
+      Type: AWS::Serverless::Function
+      Properties:
+        CodeUri: ../lambdas/cognito-user-pools-auto-confirm
+        Handler: index.handler
+        MemorySize: 128
+        Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+        Runtime: nodejs4.3
+        Timeout: 3
+
     UserPool:
       Type: AWS::Cognito::UserPool
       Properties:

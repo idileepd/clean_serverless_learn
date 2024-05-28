@@ -34,7 +34,6 @@ provider:
             - ".amazonaws.com/"
             - !Ref "UserPool"
         audience: { Ref: UserPoolClient }
-
   environment:
     USER_POOL_NAME: ${self:service}-user-pool-${self:provider.stage}
     USER_POOL_CLIENT_NAME: ${self:service}-user-pool-client-${self:provider.stage}
@@ -70,6 +69,8 @@ functions:
   token-generator:
     handler: src/tokenPatcher.handler
     name: ${self:service}-${self:provider.stage}-token-generator
+    package:
+      artifact: ./tokenPatcher.zip # Ensure you have a deployment package ready
 
 custom:
   webpack:
@@ -105,6 +106,35 @@ resources:
         IdTokenValidity: 5
         ExplicitAuthFlows:
           - ADMIN_NO_SRP_AUTH
+
+    TokenGeneratorLambda:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: ${self:service}-${self:provider.stage}-token-patcher
+        # Handler: src/tokenPatcher.handler
+        # Role: !GetAtt LambdaExecutionRole.Arn
+        # Runtime: nodejs18.x
+        # Code:
+        #   ZipFile: ${file(src/tokenPatcher.js)}
+        Handler: src/tokenPatcher.handler
+        Runtime: nodejs18.x # Choose the appropriate runtime version
+        Timeout: 10 # Set the timeout as needed
+        Role: # Specify the IAM role for the Lambda function
+          Fn::GetAtt: [LambdaExecutionRole, Arn]
+        Code:
+          ZipFile: ${file(src/tokenPatcher.ts)}
+
+    # PreTokenGenerationLambdaFunction:
+    #   Type: AWS::Lambda::Function
+    #   Properties:
+    #     FunctionName: ${self:service}-${self:provider.stage}-token-patcher
+    #     Handler: src/tokenPatcher.handler
+    #     Runtime: nodejs18.x # Choose the appropriate runtime version
+    #     Timeout: 10 # Set the timeout as needed
+    #     Role: # Specify the IAM role for the Lambda function
+    #       Fn::GetAtt: [PreTokenGenerationLambdaExecutionRole, Arn]
+    #     Code:
+    #       ZipFile: ${file(src/tokenPatcher.js)}
 
     LambdaExecutionRole:
       Type: AWS::IAM::Role

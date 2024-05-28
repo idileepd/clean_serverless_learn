@@ -94,7 +94,7 @@ const handler = async (event) => {
     claimsOverrideDetails: {
       claimsToAddOrOverride: {
         // Add custom claims here
-        "custom:role": "user",
+        test: "test-data",
         "custom:additionalData": "someValue",
       },
     },
