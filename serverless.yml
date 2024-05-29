@@ -66,11 +66,11 @@ functions:
       - httpApi:
           path: /login
           method: POST
-  token-generator:
-    handler: src/tokenPatcher.handler
-    name: ${self:service}-${self:provider.stage}-token-generator
-    package:
-      artifact: ./tokenPatcher.zip # Ensure you have a deployment package ready
+  # token-generator:
+  #   handler: src/tokenPatcher.handler
+  #   name: ${self:service}-${self:provider.stage}-token-generator
+  #   package:
+  #     artifact: ./tokenPatcher.zip # Ensure you have a deployment package ready
 
 custom:
   webpack:
@@ -110,31 +110,22 @@ resources:
     TokenGeneratorLambda:
       Type: AWS::Lambda::Function
       Properties:
-        FunctionName: ${self:service}-${self:provider.stage}-token-patcher
-        # Handler: src/tokenPatcher.handler
-        # Role: !GetAtt LambdaExecutionRole.Arn
-        # Runtime: nodejs18.x
-        # Code:
-        #   ZipFile: ${file(src/tokenPatcher.js)}
-        Handler: src/tokenPatcher.handler
-        Runtime: nodejs18.x # Choose the appropriate runtime version
-        Timeout: 10 # Set the timeout as needed
-        Role: # Specify the IAM role for the Lambda function
-          Fn::GetAtt: [LambdaExecutionRole, Arn]
+        FunctionName: ${self:service}-${self:provider.stage}-token-generator
+        Handler: index.handler
+        Role: !GetAtt LambdaExecutionRole.Arn
+        Runtime: nodejs18.x
         Code:
-          ZipFile: ${file(src/tokenPatcher.ts)}
-
-    # PreTokenGenerationLambdaFunction:
-    #   Type: AWS::Lambda::Function
-    #   Properties:
-    #     FunctionName: ${self:service}-${self:provider.stage}-token-patcher
-    #     Handler: src/tokenPatcher.handler
-    #     Runtime: nodejs18.x # Choose the appropriate runtime version
-    #     Timeout: 10 # Set the timeout as needed
-    #     Role: # Specify the IAM role for the Lambda function
-    #       Fn::GetAtt: [PreTokenGenerationLambdaExecutionRole, Arn]
-    #     Code:
-    #       ZipFile: ${file(src/tokenPatcher.js)}
+          ZipFile: |
+            'use strict';
+            exports.handler = async (event) => {
+              console.log('Received event:', JSON.stringify(event, null, 2));
+              // Implement your custom logic here
+              const response = {
+                statusCode: 200,
+                body: JSON.stringify('Hello from Lambda!'),
+              };
+              return response;
+            };
 
     LambdaExecutionRole:
       Type: AWS::IAM::Role
@@ -168,6 +159,7 @@ resources:
                     - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-token-generator"
 
     PreTokenGenerationLambdaPermission:
+      DependsOn: TokenGeneratorLambda
       Type: AWS::Lambda::Permission
       Properties:
         Action: "lambda:InvokeFunction"

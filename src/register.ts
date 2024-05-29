@@ -4,7 +4,7 @@ import { cognito } from "./provider";
 
 export const handler: APIGatewayProxyHandler = async (event, _context) => {
   try {
-    const { USER_POOL_REF, TOKEN_GENERATOR_ARN } = process.env;
+    const { USER_POOL_REF } = process.env;
     const { email, password } = JSON.parse(event.body);
     if (typeof password !== "string" || typeof email !== "string") {
       throw new Error("Invalid Credentials");
@@ -46,7 +46,6 @@ export const handler: APIGatewayProxyHandler = async (event, _context) => {
       statusCode: 200,
       body: JSON.stringify({
         result,
-        gen: TOKEN_GENERATOR_ARN,
       }),
     };
   } catch (error) {
