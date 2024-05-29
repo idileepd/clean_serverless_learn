@@ -114,17 +114,35 @@ resources:
         Handler: index.handler
         Role: !GetAtt LambdaExecutionRole.Arn
         Runtime: nodejs18.x
+        # Code:
+        #   ZipFile: |
+        #     'use strict';
+        #     exports.handler = async (event) => {
+        #       console.log('Received event:', JSON.stringify(event, null, 2));
+        #       // Implement your custom logic here
+        #       const response = {
+        #         statusCode: 200,
+        #         body: JSON.stringify('Hello from Lambda!'),
+        #       };
+        #       return response;
+        #     };
         Code:
           ZipFile: |
             'use strict';
             exports.handler = async (event) => {
               console.log('Received event:', JSON.stringify(event, null, 2));
               // Implement your custom logic here
-              const response = {
-                statusCode: 200,
-                body: JSON.stringify('Hello from Lambda!'),
+              event.response = {
+                claimsOverrideDetails: {
+                  claimsToAddOrOverride: {
+                    // Add custom claims here
+                    test: "test-data",
+                    "custom:additionalData": "someValue",
+                  },
+                },
               };
-              return response;
+
+              return event;
             };
 
     LambdaExecutionRole:
