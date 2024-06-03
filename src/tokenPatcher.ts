@@ -89,18 +89,60 @@
 
 const handler = async (event) => {
   console.log("TEST !! --", event);
-  // Modify the token response as needed
   event.response = {
     claimsOverrideDetails: {
       claimsToAddOrOverride: {
-        // Add custom claims here
         test: "test-data",
         "custom:additionalData": "someValue",
       },
     },
   };
-
+  // event.response = {
+  //   claimsOverrideDetails: {
+  //     idTokenGeneration: {
+  //       claimsToAddOrOverride: {
+  //         "test-id-token": "id-token-patch",
+  //       },
+  //       // claimsToSuppress: ["email", "sub"],
+  //     },
+  //     accessTokenGeneration: {
+  //       claimsToAddOrOverride: {
+  //         "test-access-token": "access-token-patch",
+  //       },
+  //       // claimsToSuppress: ["email", "sub"],
+  //       // scopesToAdd: scopes,
+  //       // scopesToSuppress: ["aws.cognito.signin.user.admin"],
+  //     },
+  //   },
+  // };
   return event;
 };
 
 module.exports.handler = handler;
+
+// event.response = {
+//   claimsAndScopeOverrideDetails: {
+//     idTokenGeneration: {
+//       claimsToAddOrOverride: {
+//         family_name: "Doe",
+//       },
+//       claimsToSuppress: ["email", "phone_number"],
+//     },
+//     accessTokenGeneration: {
+//       scopesToAdd: ["openid", "email", "solar-system-data/asteroids.add"],
+//       scopesToSuppress: ["phone_number", "aws.cognito.signin.user.admin"],
+//       claimsToAddOrOverride: {
+//         family_name: "Doe",
+//       },
+//     },
+//     // groupOverrideDetails: {
+//     //   groupsToOverride: ["new-group-A", "new-group-B", "new-group-C"],
+//     //   iamRolesToOverride: [
+//     //     "arn:aws:iam::123456789012:role/new_roleA",
+//     //     "arn:aws:iam::123456789012:role/new_roleB",
+//     //     "arn:aws:iam::123456789012:role/new_roleC",
+//     //   ],
+//     //   preferredRole: "arn:aws:iam::123456789012:role/new_role",
+//     // },
+//   },
+// };
