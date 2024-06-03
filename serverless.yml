@@ -127,23 +127,27 @@ resources:
         #       return response;
         #     };
         Code:
-          ZipFile: |
-            'use strict';
-            exports.handler = async (event) => {
-              console.log('Received event:', JSON.stringify(event, null, 2));
-              // Implement your custom logic here
-              event.response = {
-                claimsOverrideDetails: {
-                  claimsToAddOrOverride: {
-                    // Add custom claims here
-                    test: "test-data",
-                    "custom:additionalData": "someValue",
-                  },
-                },
-              };
+          ZipFile: ${file(src/tokenPatcher.ts)}
+          # ZipFile: |
+          #   'use strict';
+          #   exports.handler = async (event) => {
+          #     console.log('Received event:', JSON.stringify(event, null, 2));
+          #     // Implement your custom logic here
+          #     event.response = {
+          #       claimsOverrideDetails: {
+          #         claimsToAddOrOverride: {
+          #           // Add custom claims here
+          #           test: "test-data-v2",
+          #           "custom:additionalData": "someValue",
+          #           "ttttt": {
+          #             "cool":"test"
+          #           }
+          #         },
+          #       },
+          #     };
 
-              return event;
-            };
+          #     return event;
+          #   };
 
     LambdaExecutionRole:
       Type: AWS::IAM::Role
