@@ -19,6 +19,10 @@ provider:
             - cognito-idp:AdminRespondToAuthChallenge
           Resource:
             - !GetAtt UserPool.Arn
+        - Effect: Allow
+          Action:
+            - "sns:Publish"
+          Resource: "*"
 
   httpApi:
     authorizers:
@@ -76,6 +80,13 @@ functions:
           path: /verify-otp
           method: POST
 
+  sendTransactionalMessage:
+    handler: src/sendSMS.sendTransactionalMessage
+    events:
+      - http:
+          path: sendTransactionalMessage
+          method: post
+
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
@@ -112,6 +123,28 @@ resources:
           CreateAuthChallenge: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-auth-challenge"
           VerifyAuthChallengeResponse: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-auth-challenge"
 
+    # CustomAuthChallengeLambda:
+    #   Type: AWS::Lambda::Function
+    #   Properties:
+    #     FunctionName: ${self:service}-${self:provider.stage}-auth-challenge
+    #     Handler: lib/customAuthChallenge.handler
+    #     Role: !GetAtt LambdaExecutionRole.Arn
+    #     Runtime: nodejs18.x
+    #     Code:
+    #       S3Bucket:
+    #         Fn::Join:
+    #           # todo-dev-serverlessdeploymentbucket-bqtflwc7buk2
+    #           - ""
+    #           - - "${self:service}-${self:provider.stage}"
+    #             # - Ref: "AWS::Region"
+    #             # - "-"
+    #             # - Ref: "AWS::AccountId"
+    #             - "-serverlessdeploymentbucket-"
+    #             - Ref: "AWS::StackName"
+    #       S3Key: dist/customAuthChallenge.js # Path to your compiled JavaScript file
+    #     Environment:
+    #       Variables:
+    #         USER_POOL_ID: !Ref UserPool
     CustomAuthChallengeLambda:
       Type: AWS::Lambda::Function
       Properties:
