@@ -1,6 +1,6 @@
 import {
   CognitoIdentityProviderClient,
-  AdminCreateUserCommand,
+  AdminRespondToAuthChallengeCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { APIGatewayProxyHandler } from "aws-lambda";
 
@@ -9,22 +9,23 @@ const client = new CognitoIdentityProviderClient({
 });
 
 export const handler: APIGatewayProxyHandler = async (event) => {
-  const { phone_number, email } = JSON.parse(event.body);
+  const { session, otp, phone_number } = JSON.parse(event.body);
 
   try {
-    const command = new AdminCreateUserCommand({
+    const command = new AdminRespondToAuthChallengeCommand({
       UserPoolId: process.env.USER_POOL_REF,
-      Username: phone_number,
-      UserAttributes: [
-        { Name: "phone_number", Value: phone_number },
-        { Name: "email", Value: email },
-      ],
-      MessageAction: "SUPPRESS", // Suppress the default email sending by Cognito
+      ChallengeName: "CUSTOM_CHALLENGE",
+      ClientId: process.env.USER_POOL_CLIENT_REF,
+      ChallengeResponses: {
+        USERNAME: phone_number,
+        ANSWER: otp,
+      },
+      Session: session,
     });
     const response = await client.send(command);
     return {
       statusCode: 200,
-      body: JSON.stringify(response),
+      body: JSON.stringify(response.AuthenticationResult),
     };
   } catch (error) {
     return {

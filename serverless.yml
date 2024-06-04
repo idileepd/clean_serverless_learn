@@ -15,9 +15,11 @@ provider:
             - cognito-idp:AdminCreateUser
             - cognito-idp:AdminInitiateAuth
             - cognito-idp:AdminSetUserPassword
+            - cognito-idp:AdminUpdateUserAttributes
+            - cognito-idp:AdminRespondToAuthChallenge
           Resource:
             - !GetAtt UserPool.Arn
-          # Resource: "*"
+
   httpApi:
     authorizers:
       userAuthorizer:
@@ -28,13 +30,13 @@ provider:
             - !Ref "AWS::Region"
             - ".amazonaws.com/"
             - !Ref "UserPool"
-
         audience: { Ref: UserPoolClient }
+
   environment:
     USER_POOL_NAME: ${self:service}-user-pool-${self:provider.stage}
     USER_POOL_CLIENT_NAME: ${self:service}-user-pool-client-${self:provider.stage}
-    USER_POOL_REF: !Ref UserPool # gets the user_pool_id
-    USER_POOL_CLIENT_REF: !Ref UserPoolClient #Gets the client_id
+    USER_POOL_REF: !Ref UserPool
+    USER_POOL_CLIENT_REF: !Ref UserPoolClient
 
 plugins:
   - serverless-webpack
@@ -61,6 +63,18 @@ functions:
       - httpApi:
           path: /login
           method: POST
+  initiateAuth:
+    handler: src/initiateAuth.handler
+    events:
+      - httpApi:
+          path: /initiate-auth
+          method: POST
+  verifyOtp:
+    handler: src/verifyOtp.handler
+    events:
+      - httpApi:
+          path: /verify-otp
+          method: POST
 
 custom:
   webpack:
@@ -77,10 +91,39 @@ resources:
           - Name: email
             Required: true
             Mutable: true
+          - Name: phone_number
+            Required: true
+            Mutable: true
         Policies:
           PasswordPolicy:
             MinimumLength: 6
-        AutoVerifiedAttributes: ["email"]
+        AutoVerifiedAttributes: ["email", "phone_number"]
+        MfaConfiguration: "OPTIONAL"
+        SmsAuthenticationMessage: "Your authentication code is {####}"
+        SmsConfiguration:
+          SnsCallerArn: !GetAtt UserPoolRole.Arn
+          ExternalId: !Ref AWS::AccountId
+        LambdaConfig:
+          # DefineAuthChallenge: !GetAtt CustomAuthChallengeLambdaFunction.Arn
+          # CreateAuthChallenge: !GetAtt CustomAuthChallengeLambdaFunction.Arn
+          # VerifyAuthChallengeResponse: !GetAtt CustomAuthChallengeLambdaFunction.Arn
+          # PreTokenGeneration: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-auth-challenge"
+          DefineAuthChallenge: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-auth-challenge"
+          CreateAuthChallenge: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-auth-challenge"
+          VerifyAuthChallengeResponse: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-auth-challenge"
+
+    CustomAuthChallengeLambda:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: ${self:service}-${self:provider.stage}-auth-challenge
+        Handler: index.handler
+        Role: !GetAtt LambdaExecutionRole.Arn
+        Runtime: nodejs18.x
+        Code:
+          ZipFile: ${file(src/customAuthChallenge.ts)}
+        Environment:
+          Variables:
+            USER_POOL_ID: !Ref UserPool
 
     UserPoolClient:
       Type: AWS::Cognito::UserPoolClient
@@ -93,3 +136,114 @@ resources:
         IdTokenValidity: 5
         ExplicitAuthFlows:
           - ADMIN_NO_SRP_AUTH
+          - CUSTOM_AUTH_FLOW_ONLY
+
+    # UserPoolRole:
+    #   Type: "AWS::IAM::Role"
+    #   Properties:
+    #     AssumeRolePolicyDocument:
+    #       Version: "2012-10-17"
+    #       Statement:
+    #         - Effect: "Allow"
+    #           Principal:
+    #             Service: "cognito-idp.amazonaws.com"
+    #           Action: "sts:AssumeRole"
+    #     Policies:
+    #       - PolicyName: "snsPolicy"
+    #         PolicyDocument:
+    #           Version: "2012-10-17"
+    #           Statement:
+    #             - Effect: "Allow"
+    #               Action:
+    #                 - "sns:Publish"
+    #               Resource: "*"
+
+    # CustomAuthChallengeLambdaFunction:
+    #   Type: AWS::Lambda::Function
+    #   Properties:
+    #     Handler: src/customAuthChallenge.handler
+    #     Role: !GetAtt LambdaExecutionRole.Arn
+    #     Runtime: nodejs18.x
+    #     MemorySize: 128
+    #     Timeout: 10
+    #     Environment:
+    #       Variables:
+    #         USER_POOL_ID: !Ref UserPool
+    # LambdaExecutionRole:
+    #   Type: AWS::IAM::Role
+    #   Properties:
+    #     AssumeRolePolicyDocument:
+    #       Version: "2012-10-17"
+    #       Statement:
+    #         - Effect: "Allow"
+    #           Principal:
+    #             Service: "lambda.amazonaws.com"
+    #           Action: "sts:AssumeRole"
+    #     Policies:
+    #       - PolicyName: "lambdaPolicy"
+    #         PolicyDocument:
+    #           Version: "2012-10-17"
+    #           Statement:
+    #             - Effect: "Allow"
+    #               Action:
+    #                 - "logs:*"
+    #                 - "sns:Publish"
+    #               Resource: "*"
+    LambdaExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Service: "lambda.amazonaws.com"
+              Action: "sts:AssumeRole"
+        Policies:
+          - PolicyName: "lambdaPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "logs:*"
+                    - "sns:Publish"
+                  Resource: "*"
+          - PolicyName: "UserPoolLambdaInvokePolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "lambda:InvokeFunction"
+                  Resource:
+                    - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-auth-challenge"
+
+    AuthChallengeLambdaPermission:
+      DependsOn: CustomAuthChallengeLambda
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: "lambda:InvokeFunction"
+        FunctionName: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-auth-challenge"
+        Principal: "cognito-idp.amazonaws.com"
+        SourceArn: !GetAtt UserPool.Arn
+
+    UserPoolRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Service: "cognito-idp.amazonaws.com"
+              Action: "sts:AssumeRole"
+        Policies:
+          - PolicyName: "snsPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "sns:Publish"
+                  Resource: "*"
