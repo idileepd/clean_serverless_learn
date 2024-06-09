@@ -1,39 +1,123 @@
-import mongoose from "mongoose";
-import Todo, { ITodo } from "./Todo";
-import { Resolvers, ResolverContext } from "./types";
+import User, { IUser } from "./models/User";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { UserInputError, AuthenticationError } from "apollo-server-errors";
+import { createToken } from "./utils/auth";
 
-const db =
-  "mongodb+srv://dileep:qwvW9YKn9DxzIKkr@lme-serverless-db.jyxp4ak.mongodb.net/db";
-
-mongoose.connect(db, {
-  // useNewUrlParser: true,
-  // useUnifiedTopology: true,
-});
-
-const resolvers: Resolvers = {
+export const resolvers = {
   Query: {
-    getTodos: async (): Promise<ITodo[]> => {
-      return await Todo.find({});
+    me: async (_parent: any, _args: any, context: any) => {
+      if (!context.user) {
+        throw new AuthenticationError("You are not authenticated!");
+      }
+      return context.user;
     },
   },
   Mutation: {
-    createTodo: async (
-      _: any,
-      args: { title: string },
-      context: ResolverContext
-    ): Promise<ITodo> => {
-      const todo = new Todo({ title: args.title, completed: false });
-      return await todo.save();
+    createAdmin: async (_: any, { input }: { input: any }) => {
+      const {
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        phoneCountryCode,
+        password,
+        permissions,
+      } = input;
+
+      // const hashedPassword = await bcrypt.hash(password, 12);
+
+      const user = await User.create({
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        phoneCountryCode,
+        userType: "ADMIN",
+        permissions,
+        password,
+      });
+
+      // const token = createToken(user);
+
+      return {
+        // token,
+        success: true,
+        error: null,
+        data: user,
+        message: "Admin Created Successfully !",
+      };
     },
-    deleteTodo: async (
+
+    loginWithPassword: async (
       _: any,
-      args: { _id: string },
-      context: ResolverContext
-    ): Promise<ITodo | null> => {
-      const deletedTodo = await Todo.findByIdAndDelete(args._id);
-      return deletedTodo;
+      { email, password }: { email: string; password: string }
+    ) => {
+      const user = await User.findOne({ email }).select("+password");
+
+      if (!user || !(await user.correctPassword(password, user.password))) {
+        throw new UserInputError("Incorrect email or password");
+      }
+
+      const token = createToken(user);
+
+      return {
+        token,
+        user,
+      };
+    },
+
+    forgotPassword: async (_: any, { email }: { email: string }) => {
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        throw new UserInputError("There is no user with that email address.");
+      }
+
+      const resetToken = user.createPasswordResetToken();
+      await user.save({ validateBeforeSave: false });
+
+      // TODO:: Send the reset token to the user's email
+      // You'll need to implement your email sending logic here
+
+      return {
+        message: "Token sent to email!,",
+        note: "[Note] I am just sending resetToken this to you, remove this later and implement to email",
+        resetToken,
+      };
+    },
+
+    resetPassword: async (
+      _parent: any,
+      { password }: { password: string },
+      { token }: { token: string }
+    ) => {
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+
+      const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetTokenExpires: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        throw new UserInputError("Token is invalid or has expired");
+      }
+
+      user.password = await bcrypt.hash(password, 12);
+      user.passwordResetToken = undefined;
+      user.passwordResetTokenExpires = undefined;
+      await user.save();
+
+      const newToken = createToken(user);
+
+      return {
+        token: newToken,
+        user,
+      };
     },
   },
 };
-
-export default resolvers;

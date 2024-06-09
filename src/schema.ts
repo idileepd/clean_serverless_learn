@@ -1,20 +1,87 @@
 import { gql } from "apollo-server-lambda";
 
-const typeDefs = gql`
-  type Todo {
+export const typeDefs = gql`
+  scalar JSON
+
+  type User {
     _id: ID!
-    title: String!
-    completed: Boolean!
+    firstName: String!
+    lastName: String!
+    email: String!
+    phoneNumber: String!
+    phoneCountryCode: String!
+    userType: String!
+    permissions: [String!]! #todo add permissions required here if needed
+    active: Boolean!
   }
 
-  type Query {
-    getTodos: [Todo]
+  input CreateAdminInput {
+    firstName: String!
+    lastName: String!
+    email: String!
+    phoneNumber: String!
+    phoneCountryCode: String!
+    password: String!
+    permissions: [String!]!
+  }
+
+  type AuthPayload {
+    token: String
+    user: User
   }
 
   type Mutation {
-    createTodo(title: String!): Todo
-    deleteTodo(_id: ID!): Todo
+    createAdmin(input: CreateAdminInput!): GeneralResponse!
+    loginWithPassword(email: String!, password: String!): AuthPayload!
+    forgotPassword(email: String!): Message!
+    resetPassword(token: String!, password: String!): AuthPayload!
   }
-`;
 
-export default typeDefs;
+  type GeneralResponse {
+    success: Boolean
+    error: String
+    data: JSON
+    message: String
+  }
+
+  type Message {
+    message: String!
+  }
+  type Query {
+    me: User!
+  }
+
+  # type User {
+  #   id: ID!
+  #   firstName: String!
+  #   lastName: String!
+  #   email: String!
+  #   phoneNumber: PhoneNumber!
+  #   userType: String!
+  #   permissions: [String!]!
+  #   active: Boolean!
+  # }
+
+  # type PhoneNumber {
+  #   countryCode: String!
+  #   fullPhoneNumber: String!
+  # }
+
+  # type Mutation {
+  #   createAdmin(
+  #     firstName: String!
+  #     lastName: String!
+  #     email: String!
+  #     phoneNumber: PhoneNumberInput!
+  #     password: String!
+  #   ): User!
+  #   loginWithPassword(email: String!, password: String!): AuthPayload!
+  #   forgotPassword(email: String!): String!
+  #   resetPassword(token: String!, password: String!): AuthPayload!
+  # }
+
+  # input PhoneNumberInput {
+  #   countryCode: String!
+  #   fullPhoneNumber: String!
+  # }
+`;

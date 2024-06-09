@@ -6,6 +6,10 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: us-east-1
+  environment:
+    MONGODB_URI: mongodb+srv://dileep:qwvW9YKn9DxzIKkr@lme-serverless-db.jyxp4ak.mongodb.net/db
+    JWT_SECRET: my-ultra-secure-and-ultra-long-secret
+    JWT_EXPIRES_IN: 90d
 
 plugins:
   - serverless-webpack
@@ -17,7 +21,7 @@ custom:
 
 functions:
   graphql:
-    handler: src/handler.handler
+    handler: src/graphql.graphqlHandler
     events:
       - http:
           path: graphql
