@@ -1,7 +1,20 @@
 import { gql } from "apollo-server-lambda";
 
-export const typeDefs = gql`
+const typeDefs = gql`
+  type Todo {
+    _id: ID!
+    title: String!
+    completed: Boolean!
+  }
+
   type Query {
-    hello: String
+    getTodos: [Todo]
+  }
+
+  type Mutation {
+    createTodo(title: String!): Todo
+    deleteTodo(_id: ID!): Todo
   }
 `;
+
+export default typeDefs;

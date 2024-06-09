@@ -23,6 +23,7 @@
     "apollo-server-lambda": "^3.13.0",
     "aws-lambda": "^1.0.7",
     "aws-sdk": "^2.1628.0",
-    "graphql": "^16.8.1"
+    "graphql": "^16.8.1",
+    "mongoose": "^8.4.1"
   }
 }

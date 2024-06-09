@@ -1,10 +1,12 @@
 import { ApolloServer } from "apollo-server-lambda";
-import { typeDefs } from "./schema";
-import { resolvers } from "./resolvers";
+import typeDefs from "./schema";
+import resolvers from "./resolvers";
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  // playground: true,
+  introspection: true,
 });
 
-export const graphqlHandler = server.createHandler();
+exports.handler = server.createHandler();
