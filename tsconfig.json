@@ -1,14 +1,12 @@
 {
   "compilerOptions": {
-    "lib": ["es2017"],
-    "removeComments": true,
-    "moduleResolution": "node",
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "sourceMap": true,
-    "target": "es2017",
-    "outDir": "lib",
-    "typeRoots": ["./node_modules/@types"]
+    "target": "ES6",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*"]
 }

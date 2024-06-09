@@ -1,22 +1,30 @@
 const path = require("path");
 const slsw = require("serverless-webpack");
+const nodeExternals = require("webpack-node-externals");
 
 module.exports = {
+  context: __dirname,
   mode: slsw.lib.webpack.isLocal ? "development" : "production",
   entry: slsw.lib.entries,
   target: "node",
-  externals: ["aws-sdk", "aws-lambda"], // Add 'aws-lambda' here
+  externals: [nodeExternals()],
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
-        use: "ts-loader",
-        exclude: /node_modules/,
+        test: /\.ts$/,
+        loader: "ts-loader",
+        exclude: [
+          [
+            path.resolve(__dirname, "node_modules"),
+            path.resolve(__dirname, ".serverless"),
+            path.resolve(__dirname, ".webpack"),
+          ],
+        ],
       },
     ],
   },
   resolve: {
-    extensions: [".tsx", ".ts", ".js"],
+    extensions: [".ts", ".js"],
   },
   output: {
     libraryTarget: "commonjs",
