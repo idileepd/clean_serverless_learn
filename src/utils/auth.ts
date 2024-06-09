@@ -11,6 +11,7 @@ interface DecodedToken {
 
 export const decodeToken = (token: string): DecodedToken => {
   try {
+    // jwt.d
     return jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken;
   } catch (err) {
     throw new Error("Invalid or expired token");
