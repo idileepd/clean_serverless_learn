@@ -6,8 +6,6 @@ import {
 import { connectToDatabase } from "../utils/db";
 import { typeDefs } from "./schema";
 import { resolvers } from "./resolver/resolvers";
-import { decodeToken } from "../utils/auth";
-import User from "./models/User";
 
 const formatError = (err: any) => {
   if (err.originalError instanceof UserInputError) {
