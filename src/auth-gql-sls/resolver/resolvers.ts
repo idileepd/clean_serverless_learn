@@ -5,13 +5,19 @@ import { resetPassword } from "./resetPassword";
 import { getMyData } from "./getMyData";
 import { initiatePhoneAuth, verifyPhoneAuth } from "./loginWithPhoneOTP";
 import { initiateEmailAuth, verifyEmailAuth } from "./loginWithEmailOTP";
+import { merge } from "lodash";
 
-export const resolvers = {
+const x = {
+  Mutation: {
+    createAdmin,
+  },
+};
+
+const y = {
   Query: {
     me: getMyData,
   },
   Mutation: {
-    createAdmin,
     loginWithPassword,
     forgotPassword,
     resetPassword,
@@ -21,3 +27,5 @@ export const resolvers = {
     verifyEmailAuth,
   },
 };
+
+export const resolvers = merge(x, y);
