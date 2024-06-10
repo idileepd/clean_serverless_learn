@@ -1,0 +1,5 @@
+This sls wil take care of user creation
+
+- create SuperAdmin
+- create Admin - TTI & TTA
+- create Driver - TTI & TTA

@@ -1,0 +1,10 @@
+This will be taking care of
+
+- loginWithEmailPassword
+  -- TTI_ADMIN (OKTA - direct from lme)
+  -- TTA_ADMIN (CUSTOM or COGNITO login)
+  -- SUPER_ADMIN (CUSTOM or COGNITO login)
+
+- loginWithEmailOTP
+  -- TTI_DRIVER (CUSTOM or COGNITO login)
+  -- TTA_DRIVER (CUSTOM or COGNITO login)

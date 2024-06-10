@@ -1,4 +1,4 @@
-import User from "../models/User";
+import User from "../../../models/User";
 
 export const createAdmin = async (_: any, { input }: { input: any }) => {
   const {

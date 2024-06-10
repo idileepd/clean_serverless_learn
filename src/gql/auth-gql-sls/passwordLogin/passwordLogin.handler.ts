@@ -1,6 +1,6 @@
 import { UserInputError } from "apollo-server-lambda";
-import User from "../models/User";
-import { createToken } from "../../utils/auth";
+import User from "../../../models/User";
+import { createToken } from "../../../utils/auth";
 
 export const loginWithPassword = async (
   _: any,

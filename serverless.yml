@@ -5,8 +5,25 @@ frameworkVersion: "3"
 provider:
   name: aws
   runtime: nodejs18.x
-  region: us-east-1
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  memorySize: 128
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminGetUser
+            - cognito-idp:AdminCreateUser
+            - cognito-idp:AdminInitiateAuth
+            - cognito-idp:AdminSetUserPassword
+            - cognito-idp:AdminUpdateUserAttributes
+            - cognito-idp:AdminRespondToAuthChallenge
+          Resource:
+            - !GetAtt UserPool.Arn
   environment:
+    USER_POOL_REF: !Ref UserPool
+    USER_POOL_CLIENT_REF: !Ref UserPoolClient
     MONGODB_URI: mongodb+srv://dileep:qwvW9YKn9DxzIKkr@lme-serverless-db.jyxp4ak.mongodb.net/db
     JWT_SECRET: my-ultra-secure-and-ultra-long-secret
     JWT_EXPIRES_IN: 90d
@@ -22,9 +39,113 @@ custom:
 
 functions:
   auth-gql:
-    handler: src/auth-gql-sls/graphql.handler
+    handler: src/handlers/index.authHandler
     events:
       - http:
           path: auth-gql
           method: post
           cors: true
+
+resources:
+  Resources:
+    UserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-user-pool-${self:provider.stage}
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: false
+          - Name: custom:phoneNumber
+            Required: false
+            Mutable: false
+            AttributeDataType: String
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 6
+        AutoVerifiedAttributes:
+          - email
+        # MfaConfiguration: "OPTIONAL"
+        # SmsAuthenticationMessage: "Your authentication code is {####}"
+        # SmsConfiguration:
+        #   SnsCallerArn: !GetAtt UserPoolRole.Arn
+        #   ExternalId: !Ref AWS::AccountId
+        LambdaConfig:
+          DefineAuthChallenge: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-email-otp-auth-challenge"
+          CreateAuthChallenge: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-email-otp-auth-challenge"
+          VerifyAuthChallengeResponse: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-email-otp-auth-challenge"
+
+    UserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        UserPoolId:
+          Ref: UserPool
+        ClientName: ${self:service}-user-pool-client-${self:provider.stage}
+        GenerateSecret: false
+        AccessTokenValidity: 5
+        IdTokenValidity: 5
+        ExplicitAuthFlows:
+          - ADMIN_NO_SRP_AUTH
+          - CUSTOM_AUTH_FLOW_ONLY
+
+    EmailOTPAuthChallengeLambda:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: ${self:service}-${self:provider.stage}-email-otp-auth-challenge
+        Handler: index.handler
+        Role: !GetAtt LambdaExecutionRole.Arn
+        Runtime: nodejs18.x
+        Code:
+          ZipFile: ${file(src/handlers/cognito/emailOTPAuthChallenge.ts)}
+        Environment:
+          Variables:
+            USER_POOL_ID: !Ref UserPool
+
+    LambdaExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Service: "lambda.amazonaws.com"
+              Action: "sts:AssumeRole"
+        Policies:
+          - PolicyName: "lambdaPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "logs:*"
+                  Resource: "*"
+          - PolicyName: "UserPoolLambdaInvokePolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "lambda:InvokeFunction"
+                  Resource:
+                    - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-email-otp-auth-challenge"
+
+    AuthChallengeLambdaPermission:
+      DependsOn: EmailOTPAuthChallengeLambda
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: "lambda:InvokeFunction"
+        FunctionName: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-email-otp-auth-challenge"
+        Principal: "cognito-idp.amazonaws.com"
+        SourceArn: !GetAtt UserPool.Arn
+
+    UserPoolRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Service: "cognito-idp.amazonaws.com"
+              Action: "sts:AssumeRole"

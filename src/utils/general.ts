@@ -1,4 +1,6 @@
+import { AuthenticationError, UserInputError } from "apollo-server-lambda";
 import { PhoneNumberUtil } from "google-libphonenumber";
+import { GraphQLError, GraphQLFormattedError } from "graphql";
 
 const phoneUtil = PhoneNumberUtil.getInstance();
 

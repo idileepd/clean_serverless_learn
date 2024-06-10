@@ -1,11 +1,8 @@
 import mongoose, { Document, Schema } from "mongoose";
 import validator from "validator";
-// import { PhoneNumberUtil } from "google-libphonenumber";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { validatePhoneNumber } from "../../utils/general";
-
-// const phoneUtil = PhoneNumberUtil.getInstance();
+import { validatePhoneNumber } from "../utils/general";
 
 export enum UserType {
   DRIVER = "DRIVER",

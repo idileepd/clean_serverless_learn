@@ -1,0 +1,7 @@
+This will be a hybrid authorizer for
+
+- okta
+- cognito
+- custom verifier
+
+--> Verifies tokens from these

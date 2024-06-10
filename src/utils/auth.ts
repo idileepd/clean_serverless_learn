@@ -1,7 +1,5 @@
-// utils/auth.ts
-
 import jwt from "jsonwebtoken";
-import { IUser } from "../auth-gql-sls/models/User";
+import { IUser } from "../models/User";
 
 interface DecodedToken {
   id: string;
