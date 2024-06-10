@@ -1,10 +1,11 @@
 import mongoose, { Document, Schema } from "mongoose";
 import validator from "validator";
-import { PhoneNumberUtil } from "google-libphonenumber";
+// import { PhoneNumberUtil } from "google-libphonenumber";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { validatePhoneNumber } from "../../utils/general";
 
-const phoneUtil = PhoneNumberUtil.getInstance();
+// const phoneUtil = PhoneNumberUtil.getInstance();
 
 export enum UserType {
   DRIVER = "DRIVER",
@@ -42,6 +43,7 @@ export interface IUser extends Document {
   permissions: Permission[];
   password: string;
   active: boolean;
+  // Todo: once cognito is completed fix this reset and forgot pwd
   passwordChangedAt?: Date;
   passwordResetToken?: string;
   passwordResetTokenExpires?: Date;
@@ -77,12 +79,14 @@ const userSchema = new Schema<IUser>({
     index: true,
     validate: {
       validator: function (this: IUser, v: string) {
-        try {
-          const number = phoneUtil.parse(v, this.phoneCountryCode);
-          return phoneUtil.isValidNumber(number);
-        } catch (e) {
-          return false;
-        }
+        // try {
+        //   const number = phoneUtil.parse(v, this.phoneCountryCode);
+        //   return phoneUtil.isValidNumber(number);
+        //   return validatePhoneNumber
+        // } catch (e) {
+        //   return false;
+        // }
+        return validatePhoneNumber(v, this.phoneCountryCode);
       },
       message: "Please provide a valid phone number",
     },

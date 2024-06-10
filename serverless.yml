@@ -10,6 +10,7 @@ provider:
     MONGODB_URI: mongodb+srv://dileep:qwvW9YKn9DxzIKkr@lme-serverless-db.jyxp4ak.mongodb.net/db
     JWT_SECRET: my-ultra-secure-and-ultra-long-secret
     JWT_EXPIRES_IN: 90d
+    USE_COGNITO: false
 
 plugins:
   - serverless-webpack
@@ -20,10 +21,10 @@ custom:
     includeModules: true
 
 functions:
-  graphql:
-    handler: src/graphql.graphqlHandler
+  auth-gql:
+    handler: src/auth-gql-sls/graphql.handler
     events:
       - http:
-          path: graphql
+          path: auth-gql
           method: post
           cors: true

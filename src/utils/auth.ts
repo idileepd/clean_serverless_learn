@@ -1,7 +1,7 @@
 // utils/auth.ts
 
 import jwt from "jsonwebtoken";
-import { IUser } from "../models/User";
+import { IUser } from "../auth-gql-sls/models/User";
 
 interface DecodedToken {
   id: string;
@@ -9,12 +9,19 @@ interface DecodedToken {
   exp: number;
 }
 
-export const decodeToken = (token: string): DecodedToken => {
+export const verifyAndDecodeToken = (token: string): DecodedToken => {
   try {
-    // jwt.d
     return jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken;
   } catch (err) {
     throw new Error("Invalid or expired token");
+  }
+};
+
+export const decodeToken = (token: string): DecodedToken => {
+  try {
+    return jwt.decode(token) as DecodedToken;
+  } catch (err) {
+    throw new Error("Invalid token");
   }
 };
 
