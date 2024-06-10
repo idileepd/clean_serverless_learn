@@ -4,6 +4,7 @@ import { forgotPassword } from "./forgotPassword";
 import { resetPassword } from "./resetPassword";
 import { getMyData } from "./getMyData";
 import { initiatePhoneAuth, verifyPhoneAuth } from "./loginWithPhoneOTP";
+import { initiateEmailAuth, verifyEmailAuth } from "./loginWithEmailOTP";
 
 export const resolvers = {
   Query: {
@@ -16,5 +17,7 @@ export const resolvers = {
     resetPassword,
     initiatePhoneAuth,
     verifyPhoneAuth,
+    initiateEmailAuth,
+    verifyEmailAuth,
   },
 };

@@ -25,9 +25,9 @@ export const initiatePhoneAuth = async (
 
     // Generate a random 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log("Otp sent", otp);
     // Send the OTP to the user's phone number using AWS SNS
     // ... (same as the previous example)
+    // await sendPhoneOTP(phoneNumber, otp);
 
     // Create a session and store it in the database
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
@@ -66,16 +66,13 @@ export const verifyPhoneAuth = async (
       session.hashedValue
     );
 
+    // Remove the session from the database
+    await Session.findByIdAndDelete(sessionId);
+
     if (!isMatch) {
       throw new ApolloError("Invalid OTP", "INVALID_OTP");
       //   throw new UserInputError("Invalid OTP", "INVALID_OTP");
     }
-
-    // Find or create the user
-    // ... (same as the previous example)
-
-    // Remove the session from the database
-    await Session.findByIdAndDelete(sessionId);
 
     return { success: true };
   } catch (error) {
