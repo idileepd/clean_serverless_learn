@@ -7,6 +7,7 @@ import { otpLoginTypeDef, otpLoginResolver } from "./otpLogin";
 import { passwordLoginResolver, passwordLoginTypeDef } from "./passwordLogin";
 import { recoveryResolver, recoveryTypeDef } from "./recovery";
 import { commonTypeDef } from "./common.schema";
+import { merge } from "lodash";
 
 export const getSchema = () => {
   // NOTE: when ever any gql created must be added here
@@ -27,8 +28,11 @@ export const getSchema = () => {
     recoveryTypeDef,
   ];
 
-  const resolvers = mergeResolvers(allResolvers);
-  const typeDefs = mergeTypeDefs(allTypeDefs);
+  const resolvers = allResolvers.reduce(
+    (acc, resolver) => merge(acc, resolver),
+    {}
+  );
+  const typeDefs = allTypeDefs;
 
   // const schema = makeExecutableSchema({
   //   typeDefs,
