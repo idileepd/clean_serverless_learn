@@ -1,23 +1,23 @@
-import { gql } from "apollo-server-lambda";
+// import { gql } from "apollo-server-lambda";
 
-export const emailOTPLoginDefs = gql`
-  type Mutation {
-    initiateEmailAuth(email: String!): InitiateEmailAuthResponse!
-    verifyEmailAuth(
-      sessionId: ID!
-      otp: String!
-      email: String!
-    ): VerifyEmailAuthResponse!
-  }
+// export const emailOTPLoginDefs = gql`
+//   # type Mutation {
+//   #   initiateEmailAuth(email: String!): InitiateEmailAuthResponse!
+//   #   verifyEmailAuth(
+//   #     sessionId: ID!
+//   #     otp: String!
+//   #     email: String!
+//   #   ): VerifyEmailAuthResponse!
+//   # }
 
-  type InitiateEmailAuthResponse {
-    sessionId: ID!
-    otp: String!
-  }
+//   # type InitiateEmailAuthResponse {
+//   #   sessionId: ID!
+//   #   otp: String!
+//   # }
 
-  type VerifyEmailAuthResponse {
-    success: Boolean!
-  }
+//   # type VerifyEmailAuthResponse {
+//   #   success: Boolean!
+//   # }
 
-  scalar ID
-`;
+//   # scalar ID
+// `;

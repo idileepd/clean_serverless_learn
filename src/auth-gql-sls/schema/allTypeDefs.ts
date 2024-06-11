@@ -2,6 +2,8 @@ import { gql } from "apollo-server-lambda";
 
 export const allTypeDefs = gql`
   scalar JSON
+  scalar ID
+  scalar PhoneNumber
 
   type User {
     _id: ID!
@@ -15,15 +17,15 @@ export const allTypeDefs = gql`
     active: Boolean!
   }
 
-  input CreateAdminInput {
-    firstName: String!
-    lastName: String!
-    email: String!
-    phoneNumber: String!
-    phoneCountryCode: String!
-    password: String!
-    permissions: [String!]!
-  }
+  # input CreateAdminInput {
+  #   firstName: String!
+  #   lastName: String!
+  #   email: String!
+  #   phoneNumber: String!
+  #   phoneCountryCode: String!
+  #   password: String!
+  #   permissions: [String!]!
+  # }
 
   type AuthPayload {
     token: String
@@ -35,11 +37,11 @@ export const allTypeDefs = gql`
   }
 
   # Queries and Mutations
-  type Query {
-    me: User!
-  }
+  # type Query {
+  #   me: User!
+  # }
   type Mutation {
-    createAdmin(input: CreateAdminInput!): GeneralResponse!
+    # createAdmin(input: CreateAdminInput!): GeneralResponse!
     loginWithPassword(email: String!, password: String!): AuthPayload!
     forgotPassword(email: String!): Message!
     resetPassword(token: String!, password: String!): AuthPayload!
