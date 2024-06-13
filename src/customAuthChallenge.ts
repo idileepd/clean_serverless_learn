@@ -1,6 +1,10 @@
 const { SNSClient, PublishCommand } = require("@aws-sdk/client-sns");
 
-const snsClient = new SNSClient({ region: "us-east-1" }); // Adjust the region as necessary
+const snsClient = new SNSClient({
+  region: process.env.AWS_REGION || "us-east-1",
+}); // Adjust the region as necessary
+
+// console.log(process.env.AWS_REGION);
 
 const publishSNSMessage = async (message, phoneNumber) => {
   const params = {
