@@ -102,18 +102,14 @@ resources:
           - Name: email
             Required: true
             Mutable: true
-          - Name: phone_number
-            Required: true
-            Mutable: true
+          # - Name: custom:phoneNumber
+          #   Mutable: true
+          #   AttributeDataType: String
         Policies:
           PasswordPolicy:
             MinimumLength: 6
-        AutoVerifiedAttributes: ["email", "phone_number"]
-        MfaConfiguration: "OPTIONAL"
-        SmsAuthenticationMessage: "Your authentication code is {####}"
-        SmsConfiguration:
-          SnsCallerArn: !GetAtt UserPoolRole.Arn
-          ExternalId: !Ref AWS::AccountId
+        AutoVerifiedAttributes:
+          - email
         LambdaConfig:
           DefineAuthChallenge: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-auth-challenge"
           CreateAuthChallenge: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-auth-challenge"

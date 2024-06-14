@@ -9,15 +9,20 @@ const client = new CognitoIdentityProviderClient({
 });
 
 export const handler: APIGatewayProxyHandler = async (event) => {
-  const { phone_number, email } = JSON.parse(event.body);
+  const { email } = JSON.parse(event.body);
 
   try {
     const command = new AdminCreateUserCommand({
       UserPoolId: process.env.USER_POOL_REF,
-      Username: phone_number,
+      Username: email,
       UserAttributes: [
-        { Name: "phone_number", Value: phone_number },
+        // { Name: "custom:phoneNumber", Value: phone_number },
+
         { Name: "email", Value: email },
+        {
+          Name: "email_verified",
+          Value: "true",
+        },
       ],
       MessageAction: "SUPPRESS", // Suppress the default email sending by Cognito
     });

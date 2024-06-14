@@ -30,7 +30,9 @@ const publishSNSMessage = async (message, phoneNumber) => {
 const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
-const handler = async (event, _context, callback) => {
+const handler = async (event, context, callback) => {
+  console.log(event);
+  console.log(context);
   if (event.triggerSource === "DefineAuthChallenge_Authentication") {
     if (event.request.session.length === 0) {
       event.response.issueTokens = false;
@@ -48,9 +50,11 @@ const handler = async (event, _context, callback) => {
     }
   } else if (event.triggerSource === "CreateAuthChallenge_Authentication") {
     if (event.request.challengeName === "CUSTOM_CHALLENGE") {
-      const otp = generateOTP();
-      const phoneNumber = event.request.userAttributes.phone_number; // Assuming the phone number is in user attributes
-      await publishSNSMessage(`Your OTP is ${otp}`, phoneNumber);
+      const otp = "123456" || generateOTP();
+
+      console.log(event.request);
+      // const phoneNumber = event.request.userAttributes.email; // Assuming the phone number is in user attributes
+      // await publishSNSMessage(`Your OTP is ${otp}`, phoneNumber);
 
       event.response.publicChallengeParameters = { otp }; // For testing purposes only. Do not send OTP back in a real scenario
       event.response.privateChallengeParameters = { answer: otp };
